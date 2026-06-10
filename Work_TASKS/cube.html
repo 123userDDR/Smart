@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>TENET Cubes</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      background: #0a0a14;
+      overflow: hidden;
+      user-select: none;
+      font-family: 'Courier New', monospace;
+    }
+
+    canvas { display: block; }
+
+    #ui {
+      position: fixed; top: 0; left: 0; width: 100%;
+      pointer-events: none; z-index: 10;
+    }
+
+    #top-bar {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 16px 24px;
+    }
+
+    #info { color: rgba(255,255,255,0.7); font-size: 14px; }
+
+    #phase-label {
+      font-size: 18px; font-weight: bold;
+      letter-spacing: 4px; text-transform: uppercase;
+    }
+
+    .phase-forward { color: #e74c3c; }
+    .phase-backward { color: #3498db; }
+
+    #timeline-container {
+      position: fixed; bottom: 0; left: 0; width: 100%;
+      padding: 12px 24px 16px;
+      pointer-events: none; z-index: 10;
+    }
+
+    #timeline-bar {
+      width: 100%; height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px; overflow: hidden;
+    }
+
+    #timeline-fill { height: 100%; border-radius: 3px; }
+    .fill-forward { background: #e74c3c; }
+    .fill-backward { background: #3498db; }
+
+    #timeline-info {
+      display: flex; justify-content: space-between;
+      margin-top: 6px; color: rgba(255,255,255,0.4); font-size: 12px;
+    }
+
+    #hint {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: rgba(255,255,255,0.6); font-size: 16px;
+      letter-spacing: 2px; text-align: center;
+      pointer-events: none; z-index: 20;
+      transition: opacity 0.5s;
+    }
+
+    #pause-overlay {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: rgba(255,255,255,0.7); font-size: 20px;
+      letter-spacing: 3px; text-align: center;
+      pointer-events: none; z-index: 20;
+      display: none;
+    }
+
+    #start-panel {
+      position: fixed; bottom: 120px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    #start-panel.hidden { display: none; }
+
+    #frames-label {
+      display: flex; align-items: center; gap: 6px;
+      color: rgba(255,255,255,0.5);
+      font-family: 'Courier New', monospace;
+      font-size: 11px; letter-spacing: 1px;
+    }
+
+    #frames-input {
+      width: 58px;
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 4px;
+      padding: 6px 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      text-align: center;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+
+    #frames-input::-webkit-inner-spin-button,
+    #frames-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+    #frames-input:focus { border-color: rgba(255,255,255,0.5); }
+
+    #start-btn {
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      border: 2px solid rgba(255,255,255,0.4);
+      border-radius: 6px;
+      padding: 10px 40px;
+      font-family: 'Courier New', monospace;
+      font-size: 18px;
+      letter-spacing: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    #start-btn:hover {
+      color: #fff;
+      border-color: #e74c3c;
+      background: rgba(231,76,60,0.15);
+    }
+
+    #test-toggle {
+      position: fixed; top: 16px; right: 16px; z-index: 30;
+      display: flex; align-items: center; gap: 6px;
+      cursor: pointer;
+    }
+
+    #test-toggle input {
+      appearance: none; width: 16px; height: 16px;
+      border: 2px solid #2ecc71; border-radius: 3px;
+      background: transparent; cursor: pointer;
+      display: grid; place-content: center;
+    }
+
+    #test-toggle input:checked { background: #2ecc71; }
+
+    #test-toggle input:checked::after {
+      content: ''; width: 8px; height: 8px;
+      background: #0a0a14;
+      clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    }
+
+    #test-toggle label {
+      color: #2ecc71; font-size: 11px;
+      font-family: 'Courier New', monospace; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="canvas"></canvas>
+
+  <div id="ui">
+    <div id="top-bar">
+      <div id="phase-label"></div>
+      <div id="info"></div>
+    </div>
+  </div>
+
+  <div id="timeline-container">
+    <div id="timeline-bar"><div id="timeline-fill"></div></div>
+    <div id="timeline-info">
+      <span id="frame-counter"></span>
+      <span id="direction-label"></span>
+    </div>
+  </div>
+
+  <div id="test-toggle">
+    <input type="checkbox" id="test-mode">
+    <label for="test-mode">PHYSICS TEST</label>
+  </div>
+
+  <div id="hint">Расставь кубики, нарисуй стены и нажми START</div>
+  <div id="start-panel">
+    <label id="frames-label">FRAMES<input type="number" id="frames-input" value="100" min="2" max="9999" step="1"></label>
+    <button id="start-btn">START</button>
+  </div>
+  <div id="pause-overlay"></div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let TOTAL_FRAMES = 100;
+    const FPS = 30;
+    const FRAME_DUR = 1000 / FPS;
+    const ZOOM = 0.5;
+    const SIZE = 80;
+    const GREEN_SIZE = 5;
+    const GREEN_COUNT = 600;
+    const WALL_T = 60;
+
+    const { Engine, Bodies, Body, Composite, Constraint, Vertices, Bounds } = Matter;
+
+    // =============================================
+    //  SHARED STATE
+    // =============================================
+    let testMode = false;
+    let W = 0, H = 0;
+    let pulseTime = 0;
+    let mouseX = 0, mouseY = 0;
+    let placing = true;
+    let placingTarget = null;
+    let dragTargetAngle = 0;  // rotational spring target during drag
+
+    // Yellow walls drawn by player
+    let userWalls = [];         // [{cx, cy, w, h}, ...] max 2
+    let drawingWall = false;
+    let wallStartX = 0, wallStartY = 0;
+    let tUserWallBodies = [];   // Matter.js static bodies
+
+    function resize() {
+      W = window.innerWidth / ZOOM;
+      H = window.innerHeight / ZOOM;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // =============================================
+    //  MATTER.JS HELPERS
+    // =============================================
+    function createWalls() {
+      const opts = { isStatic: true, restitution: 0.4, friction: 0.04 };
+      return [
+        Bodies.rectangle(W / 2, -WALL_T / 2, W + WALL_T * 2, WALL_T, opts),
+        Bodies.rectangle(W / 2, H + WALL_T / 2, W + WALL_T * 2, WALL_T, opts),
+        Bodies.rectangle(-WALL_T / 2, H / 2, WALL_T, H + WALL_T * 2, opts),
+        Bodies.rectangle(W + WALL_T / 2, H / 2, WALL_T, H + WALL_T * 2, opts),
+      ];
+    }
+
+    function createCubeBody(cx, cy, isStatic) {
+      return Bodies.rectangle(cx, cy, SIZE, SIZE, {
+        isStatic,
+        restitution: 0.4,
+        friction: 0.04,
+        frictionAir: 0.02,
+        density: 0.002,
+      });
+    }
+
+    function createGreenBody(cx, cy) {
+      return Bodies.rectangle(cx, cy, GREEN_SIZE, GREEN_SIZE, {
+        isStatic: false,
+        restitution: 0.3,
+        friction: 0.1,
+        frictionAir: 0.08,
+        density: 0.001,
+      });
+    }
+
+    function bodyHitTest(body, mx, my) {
+      return Bounds.contains(body.bounds, { x: mx, y: my }) &&
+             Vertices.contains(body.vertices, { x: mx, y: my });
+    }
+
+    // =============================================
+    //  TENET MODE
+    // =============================================
+    let tEngine = null;
+    let tRedBody = null;
+    let tBlueBody = null;
+    let tWalls = [];
+    let tDragConstraint = null;
+
+    let iteration = 0;
+    let currentFrame = 0;
+    let running = false;
+    let started = false;
+    let paused = false;
+    let playerControlling = false;
+
+    // Recordings: {x, y, angle}[] (center-based)
+    let redRecording = null;
+    let blueRecording = null;
+    let greenBodies = [];
+    let greenRecordings = [];  // array of GREEN_COUNT recording arrays
+    let greenFreed = [];       // boolean[] — true = no longer guided, recording overwritten
+
+    function isForward() { return iteration % 2 === 0; }
+    function activeColor() { return isForward() ? 'red' : 'blue'; }
+    function activeBody() { return isForward() ? tRedBody : tBlueBody; }
+    function replayBody() { return isForward() ? tBlueBody : tRedBody; }
+    function activeRecording() { return isForward() ? redRecording : blueRecording; }
+    function replayRecording() { return isForward() ? blueRecording : redRecording; }
+
+    function initTenetEngine() {
+      if (tEngine) Engine.clear(tEngine);
+
+      tEngine = Engine.create();
+      tEngine.gravity.y = 0;
+
+      const redCx = W * 0.3, redCy = H / 2;
+      const blueCx = W * 0.7, blueCy = H / 2;
+
+      // Both always dynamic — replay body is guided via setPosition each frame
+      tRedBody = createCubeBody(redCx, redCy, false);
+      tBlueBody = createCubeBody(blueCx, blueCy, false);
+
+      // Position from recordings if available
+      const startFrame = isForward() ? 0 : TOTAL_FRAMES - 1;
+
+      if (redRecording && redRecording[startFrame]) {
+        const f = redRecording[startFrame];
+        Body.setPosition(tRedBody, { x: f.x, y: f.y });
+        Body.setAngle(tRedBody, f.angle || 0);
+      }
+      if (blueRecording && blueRecording[startFrame]) {
+        const f = blueRecording[startFrame];
+        Body.setPosition(tBlueBody, { x: f.x, y: f.y });
+        Body.setAngle(tBlueBody, f.angle || 0);
+      }
+
+      // Zero out velocities
+      Body.setVelocity(tRedBody, { x: 0, y: 0 });
+      Body.setVelocity(tBlueBody, { x: 0, y: 0 });
+      Body.setAngularVelocity(tRedBody, 0);
+      Body.setAngularVelocity(tBlueBody, 0);
+
+      // Green cubes
+      greenBodies = [];
+      const margin = GREEN_SIZE + 10;
+      for (let i = 0; i < GREEN_COUNT; i++) {
+        const rec = greenRecordings[i];
+        let gx, gy;
+        if (rec && rec[startFrame]) {
+          gx = rec[startFrame].x;
+          gy = rec[startFrame].y;
+        } else {
+          gx = margin + Math.random() * (W - margin * 2);
+          gy = margin + Math.random() * (H - margin * 2);
+        }
+        const gb = createGreenBody(gx, gy);
+        if (rec && rec[startFrame]) {
+          Body.setAngle(gb, rec[startFrame].angle || 0);
+        }
+        Body.setVelocity(gb, { x: 0, y: 0 });
+        Body.setAngularVelocity(gb, 0);
+        greenBodies.push(gb);
+      }
+
+      greenFreed = new Array(GREEN_COUNT).fill(false);
+
+      // Yellow user walls (static)
+      tUserWallBodies = [];
+      for (const uw of userWalls) {
+        const wb = Bodies.rectangle(uw.cx, uw.cy, uw.w, uw.h, {
+          isStatic: true, restitution: 0.4, friction: 0.04
+        });
+        tUserWallBodies.push(wb);
+      }
+
+      tWalls = createWalls();
+      Composite.add(tEngine.world, [tRedBody, tBlueBody, ...greenBodies, ...tUserWallBodies, ...tWalls]);
+
+      // Detect character ↔ green collisions → free the green
+      const Events = Matter.Events;
+      Events.on(tEngine, 'collisionStart', (event) => {
+        for (const pair of event.pairs) {
+          const a = pair.bodyA, b = pair.bodyB;
+          let gi = -1;
+          if (a === tRedBody || a === tBlueBody) gi = greenBodies.indexOf(b);
+          if (b === tRedBody || b === tBlueBody) gi = greenBodies.indexOf(a);
+          if (gi >= 0 && !greenFreed[gi]) {
+            greenFreed[gi] = true;
+            // Erase future recording from current frame
+            const rec = greenRecordings[gi];
+            if (rec) {
+              if (isForward()) {
+                for (let f = currentFrame; f < TOTAL_FRAMES; f++) rec[f] = null;
+              } else {
+                for (let f = currentFrame; f >= 0; f--) rec[f] = null;
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function startGame() {
+      redRecording = new Array(TOTAL_FRAMES).fill(null);
+      blueRecording = new Array(TOTAL_FRAMES).fill(null);
+      greenRecordings = [];
+      for (let i = 0; i < GREEN_COUNT; i++) {
+        greenRecordings.push(new Array(TOTAL_FRAMES).fill(null));
+      }
+      iteration = 0;
+      currentFrame = 0;
+      playerControlling = false;
+      tDragConstraint = null;
+      placing = true;
+      placingTarget = null;
+      userWalls = [];
+      drawingWall = false;
+      initTenetEngine();
+    }
+
+    function eraseRecordingFrom(frame) {
+      const rec = activeRecording();
+      if (!rec) return;
+      if (isForward()) {
+        for (let i = frame; i < TOTAL_FRAMES; i++) rec[i] = null;
+      } else {
+        for (let i = frame; i >= 0; i--) rec[i] = null;
+      }
+    }
+
+    function takeControl() {
+      if (playerControlling) return;
+      playerControlling = true;
+      eraseRecordingFrom(currentFrame);
+    }
+
+    let prevMouseX = 0, prevMouseY = 0;
+
+    function updateDragTargetAngle(body, facing) {
+      const dx = mouseX - prevMouseX;
+      const dy = mouseY - prevMouseY;
+      const dist = dx * dx + dy * dy;
+      prevMouseX = mouseX;
+      prevMouseY = mouseY;
+      if (dist < 4) return;
+      let theta = Math.atan2(dy, dx) + (facing === -1 ? Math.PI : 0);
+      // Smooth: blend toward new theta instead of snapping
+      let diff = theta - dragTargetAngle;
+      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+      dragTargetAngle += diff * 0.3;
+    }
+
+    function applyDragAngleSpring(body) {
+      let diff = dragTargetAngle - body.angle;
+      // Shortest path
+      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+      Body.setAngle(body, body.angle + diff * 0.15);
+      Body.setAngularVelocity(body, 0);
+    }
+
+    function attachDrag() {
+      if (tDragConstraint) return;
+      const ab = activeBody();
+      dragTargetAngle = ab.angle;
+      prevMouseX = mouseX;
+      prevMouseY = mouseY;
+      tDragConstraint = Constraint.create({
+        pointA: { x: mouseX, y: mouseY },
+        bodyB: ab,
+        pointB: {
+          x: mouseX - ab.position.x,
+          y: mouseY - ab.position.y
+        },
+        stiffness: 0.2,
+        damping: 0.1,
+        length: 0
+      });
+      Composite.add(tEngine.world, tDragConstraint);
+    }
+
+    function detachDrag() {
+      if (!tDragConstraint) return;
+      Composite.remove(tEngine.world, tDragConstraint);
+      tDragConstraint = null;
+    }
+
+    function guideBodyToFrame(body, recording, frame) {
+      if (!recording) return;
+      const f = recording[frame];
+      if (!f) return;
+      Body.setPosition(body, { x: f.x, y: f.y });
+      Body.setAngle(body, f.angle || 0);
+      Body.setVelocity(body, { x: 0, y: 0 });
+      Body.setAngularVelocity(body, 0);
+    }
+
+    function tenetTick() {
+      const ab = activeBody();
+      const rb = replayBody();
+
+      // 1. Replay body: force to recorded position (acts like kinematic)
+      guideBodyToFrame(rb, replayRecording(), currentFrame);
+
+      // 2. Active body in AUTO mode: also follow recording
+      if (!playerControlling) {
+        guideBodyToFrame(ab, activeRecording(), currentFrame);
+      }
+
+      // 3. Guide green bodies from recordings (only if not freed by collision)
+      for (let i = 0; i < greenBodies.length; i++) {
+        if (!greenFreed[i]) {
+          guideBodyToFrame(greenBodies[i], greenRecordings[i], currentFrame);
+        }
+      }
+
+      // 4. Update mouse constraint position + orient toward movement
+      if (tDragConstraint) {
+        tDragConstraint.pointA = { x: mouseX, y: mouseY };
+        const facing = isForward() ? 1 : -1;
+        updateDragTargetAngle(ab, facing);
+        applyDragAngleSpring(ab);
+      }
+
+      // 5. Step physics — collisions resolved here
+      Engine.update(tEngine, FRAME_DUR);
+
+      // 5b. Re-apply orientation after physics (overrides collision rotation)
+      if (tDragConstraint) {
+        applyDragAngleSpring(ab);
+      }
+
+      // 6. Record all bodies' final positions (after physics)
+      if (redRecording) {
+        redRecording[currentFrame] = {
+          x: tRedBody.position.x,
+          y: tRedBody.position.y,
+          angle: tRedBody.angle
+        };
+      }
+      if (blueRecording) {
+        blueRecording[currentFrame] = {
+          x: tBlueBody.position.x,
+          y: tBlueBody.position.y,
+          angle: tBlueBody.angle
+        };
+      }
+      for (let i = 0; i < greenBodies.length; i++) {
+        greenRecordings[i][currentFrame] = {
+          x: greenBodies[i].position.x,
+          y: greenBodies[i].position.y,
+          angle: greenBodies[i].angle
+        };
+      }
+
+      // 6. Advance frame
+      if (isForward()) {
+        currentFrame++;
+        if (currentFrame >= TOTAL_FRAMES) endIteration();
+      } else {
+        currentFrame--;
+        if (currentFrame < 0) endIteration();
+      }
+    }
+
+    function endIteration() {
+      iteration++;
+      playerControlling = false;
+      detachDrag();
+      paused = true;
+      running = false;
+
+      if (isForward()) {
+        currentFrame = 0;
+        if (!redRecording) redRecording = new Array(TOTAL_FRAMES).fill(null);
+      } else {
+        currentFrame = TOTAL_FRAMES - 1;
+        if (!blueRecording) blueRecording = new Array(TOTAL_FRAMES).fill(null);
+      }
+
+      // Rebuild engine for next iteration
+      initTenetEngine();
+
+      const label = activeColor() === 'red' ? 'КРАСНЫЙ' : 'СИНИЙ';
+      document.getElementById('pause-overlay').textContent =
+        `Итерация ${iteration} — ${label} кубик`;
+      document.getElementById('pause-overlay').style.display = 'block';
+    }
+
+    startGame();
+
+    // =============================================
+    //  PHYSICS TEST MODE (Matter.js sandbox)
+    // =============================================
+    let mEngine = null;
+    let mBodies = [];
+    let mWalls = [];
+    let mDragConstraint = null;
+    let mDragTarget = null;
+
+    function createTestBody(cx, cy, color, label, draggable) {
+      const body = Bodies.rectangle(cx, cy, SIZE, SIZE, {
+        restitution: 0.4, friction: 0.04, frictionAir: 0.02, density: 0.002,
+      });
+      return { body, color, label, draggable };
+    }
+
+    function enterTestMode() {
+      running = false; started = false; paused = false;
+      playerControlling = false; placing = false; placingTarget = null;
+      detachDrag();
+      mDragTarget = null; mDragConstraint = null;
+      document.getElementById('start-panel').classList.add('hidden');
+
+      mEngine = Engine.create();
+      mEngine.gravity.y = 0;
+
+      mBodies = [];
+      mBodies.push(createTestBody(W * 0.3, H / 2, 'rgba(231,76,60,0.9)', 'RED', true));
+      mBodies.push(createTestBody(W * 0.7, H / 2, 'rgba(52,152,219,0.9)', 'BLUE', true));
+
+      const spots = [
+        [W * 0.15, H * 0.25], [W * 0.5, H * 0.2], [W * 0.85, H * 0.3],
+        [W * 0.25, H * 0.75], [W * 0.7, H * 0.8]
+      ];
+      for (let i = 0; i < 5; i++) {
+        mBodies.push(createTestBody(spots[i][0], spots[i][1], 'rgba(46,204,113,0.85)', `G${i + 1}`, false));
+      }
+
+      mWalls = createWalls();
+      Composite.add(mEngine.world, [...mBodies.map(b => b.body), ...mWalls]);
+
+      document.getElementById('hint').style.opacity = '0';
+      document.getElementById('pause-overlay').style.display = 'none';
+    }
+
+    function exitTestMode() {
+      if (mEngine) {
+        if (mDragConstraint) Composite.remove(mEngine.world, mDragConstraint);
+        mDragConstraint = null;
+        Engine.clear(mEngine); mEngine = null;
+      }
+      mBodies = []; mWalls = []; mDragTarget = null;
+      startGame();
+      started = false;
+      document.getElementById('hint').style.opacity = '1';
+      document.getElementById('start-panel').classList.remove('hidden');
+    }
+
+    function testBodyAt(mx, my) {
+      for (const entry of mBodies) {
+        if (!entry.draggable) continue;
+        if (bodyHitTest(entry.body, mx, my)) return entry;
+      }
+      return null;
+    }
+
+    // =============================================
+    //  TEST MODE TOGGLE
+    // =============================================
+    const testCheckbox = document.getElementById('test-mode');
+    testCheckbox.addEventListener('change', () => {
+      testMode = testCheckbox.checked;
+      if (testMode) enterTestMode();
+      else exitTestMode();
+    });
+
+    const startBtn = document.getElementById('start-btn');
+    const startPanel = document.getElementById('start-panel');
+    const framesInput = document.getElementById('frames-input');
+
+    startBtn.addEventListener('click', () => {
+      if (!placing) return;
+      const val = parseInt(framesInput.value, 10);
+      if (!val || val < 2) { framesInput.value = '2'; return; }
+      TOTAL_FRAMES = Math.min(val, 9999);
+      // Reinit recordings with new length
+      redRecording = new Array(TOTAL_FRAMES).fill(null);
+      blueRecording = new Array(TOTAL_FRAMES).fill(null);
+      greenRecordings = [];
+      for (let i = 0; i < GREEN_COUNT; i++) {
+        greenRecordings.push(new Array(TOTAL_FRAMES).fill(null));
+      }
+      currentFrame = 0;
+      placing = false;
+      placingTarget = null;
+      // Save placed positions before engine rebuild
+      const redPlaced = tRedBody ? { x: tRedBody.position.x, y: tRedBody.position.y } : null;
+      const bluePlaced = tBlueBody ? { x: tBlueBody.position.x, y: tBlueBody.position.y } : null;
+      // Rebuild engine with walls included
+      initTenetEngine();
+      // Restore placed positions
+      if (redPlaced) Body.setPosition(tRedBody, redPlaced);
+      if (bluePlaced) Body.setPosition(tBlueBody, bluePlaced);
+      started = true;
+      running = true;
+      startPanel.classList.add('hidden');
+      document.getElementById('hint').style.opacity = '0';
+    });
+
+    // =============================================
+    //  MOUSE
+    // =============================================
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX / ZOOM;
+      mouseY = e.clientY / ZOOM;
+
+      if (testMode) {
+        if (mDragConstraint) mDragConstraint.pointA = { x: mouseX, y: mouseY };
+        const over = testBodyAt(mouseX, mouseY);
+        document.body.style.cursor = mDragConstraint ? 'grabbing' : over ? 'grab' : 'default';
+        return;
+      }
+
+      // Placing mode — drag cube or draw wall
+      if (placing) {
+        if (placingTarget) {
+          Body.setPosition(placingTarget, { x: mouseX, y: mouseY });
+          document.body.style.cursor = 'grabbing';
+        } else if (drawingWall) {
+          document.body.style.cursor = 'crosshair';
+        } else {
+          const overRed = bodyHitTest(tRedBody, mouseX, mouseY);
+          const overBlue = bodyHitTest(tBlueBody, mouseX, mouseY);
+          document.body.style.cursor = (overRed || overBlue) ? 'grab' :
+            userWalls.length < 2 ? 'crosshair' : 'default';
+        }
+        return;
+      }
+
+      // TENET mode cursor
+      if (!started || paused) { document.body.style.cursor = 'default'; return; }
+      const ab = activeBody();
+      if (ab) {
+        const over = bodyHitTest(ab, mouseX, mouseY);
+        document.body.style.cursor = tDragConstraint ? 'grabbing' : over ? 'grab' : 'default';
+      }
+    });
+
+    document.addEventListener('mousedown', (e) => {
+      if (e.target.closest('#test-toggle') || e.target.closest('#start-panel')) return;
+      mouseX = e.clientX / ZOOM;
+      mouseY = e.clientY / ZOOM;
+
+      // --- TEST MODE ---
+      if (testMode) {
+        const entry = testBodyAt(mouseX, mouseY);
+        if (entry) {
+          mDragTarget = entry;
+          dragTargetAngle = entry.body.angle;
+          mDragConstraint = Constraint.create({
+            pointA: { x: mouseX, y: mouseY },
+            bodyB: entry.body,
+            pointB: { x: mouseX - entry.body.position.x, y: mouseY - entry.body.position.y },
+            stiffness: 0.2, damping: 0.1, length: 0
+          });
+          Composite.add(mEngine.world, mDragConstraint);
+        }
+        return;
+      }
+
+      // --- PLACING MODE ---
+      if (placing) {
+        if (bodyHitTest(tRedBody, mouseX, mouseY)) {
+          placingTarget = tRedBody;
+        } else if (bodyHitTest(tBlueBody, mouseX, mouseY)) {
+          placingTarget = tBlueBody;
+        } else if (userWalls.length < 2) {
+          // Start drawing a wall
+          drawingWall = true;
+          wallStartX = mouseX;
+          wallStartY = mouseY;
+        }
+        return;
+      }
+
+      // --- TENET MODE ---
+      // Resume from pause
+      if (paused) {
+        paused = false;
+        running = true;
+        document.getElementById('pause-overlay').style.display = 'none';
+      }
+
+      // Try grab active cube
+      const ab = activeBody();
+      if (ab && bodyHitTest(ab, mouseX, mouseY)) {
+        takeControl();
+        attachDrag();
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      // Test mode
+      if (testMode && mDragConstraint) {
+        Composite.remove(mEngine.world, mDragConstraint);
+        mDragConstraint = null;
+        mDragTarget = null;
+      }
+      // Placing mode
+      if (placing) {
+        if (drawingWall) {
+          drawingWall = false;
+          const dx = mouseX - wallStartX;
+          const dy = mouseY - wallStartY;
+          const w = Math.abs(dx);
+          const h = Math.abs(dy);
+          if (w > 10 && h > 5 || h > 10 && w > 5) {
+            userWalls.push({
+              cx: wallStartX + dx / 2,
+              cy: wallStartY + dy / 2,
+              w, h
+            });
+          }
+        }
+        placingTarget = null;
+        return;
+      }
+      // TENET mode
+      detachDrag();
+    });
+
+    // =============================================
+    //  RENDER
+    // =============================================
+    // facing: -1 = left, +1 = right; sz overrides SIZE
+    function drawCubeRotated(cx, cy, color, isActive, label, angle, facing, sz) {
+      const f = facing || 1;
+      const S = sz || SIZE;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle || 0);
+
+      const R = S * 0.44;              // head radius
+      const armW = S * 0.75;            // arm width
+      const armH = S * 0.2;            // arm height
+      const armGap = R + armH * 0.35;  // distance from center to arm center
+      const armShift = S * 0.18 * f;    // shift arms forward in facing dir
+
+      // Shadow
+      ctx.save();
+      ctx.translate(3, 3);
+      ctx.globalAlpha = 0.25;
+      ctx.fillStyle = '#000';
+      ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
+      ctx.fillRect(-armW / 2 + armShift, -armGap - armH / 2, armW, armH);
+      ctx.fillRect(-armW / 2 + armShift, armGap - armH / 2, armW, armH);
+      ctx.restore();
+
+      // Top arm
+      ctx.fillStyle = color;
+      const armR = armH * 0.35;
+      drawRoundRect(-armW / 2 + armShift, -armGap - armH / 2, armW, armH, armR);
+
+      // Bottom arm
+      drawRoundRect(-armW / 2 + armShift, armGap - armH / 2, armW, armH, armR);
+
+      // Head circle
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(0, 0, R, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Glow / outline
+      if (isActive) {
+        const glow = 0.4 + 0.3 * Math.sin(pulseTime * 4);
+        ctx.strokeStyle = `rgba(255,255,255,${glow})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(0, 0, R + 2, 0, Math.PI * 2); ctx.stroke();
+      } else {
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.stroke();
+      }
+
+      // Eyes
+      const eyeR = 3.5;
+      const eyeSpread = 8;
+      const eyeOffset = R * 0.35 * f; // horizontal offset toward facing dir
+      ctx.fillStyle = '#0a0a14';
+      ctx.beginPath();
+      ctx.arc(eyeOffset, -eyeSpread, eyeR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(eyeOffset, eyeSpread, eyeR, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawRoundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawTrail(recording, color) {
+      if (!recording) return;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      let first = true;
+      for (let i = 0; i < TOTAL_FRAMES; i++) {
+        const f = recording[i];
+        if (!f) continue;
+        if (first) { ctx.moveTo(f.x, f.y); first = false; }
+        else ctx.lineTo(f.x, f.y);
+      }
+      ctx.stroke();
+    }
+
+    function drawGreenCube(cx, cy, angle, alpha) {
+      const S = GREEN_SIZE;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle || 0);
+      ctx.fillStyle = `rgba(46,204,113,${alpha || 0.7})`;
+      ctx.fillRect(-S / 2, -S / 2, S, S);
+      ctx.restore();
+    }
+
+    function drawYellowWall(cx, cy, w, h, alpha) {
+      ctx.fillStyle = `rgba(241,196,15,${alpha || 0.6})`;
+      ctx.fillRect(cx - w / 2, cy - h / 2, w, h);
+      ctx.strokeStyle = `rgba(241,196,15,${Math.min(1, (alpha || 0.6) + 0.2)})`;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(cx - w / 2, cy - h / 2, w, h);
+    }
+
+    function drawDragLine(targetBody) {
+      if (!targetBody) return;
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(mouseX, mouseY);
+      ctx.lineTo(targetBody.position.x, targetBody.position.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.scale(ZOOM, ZOOM);
+
+      // Grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < W; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      for (let y = 0; y < H; y += 40) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+
+      // --- TEST MODE ---
+      if (testMode && mBodies.length > 0) {
+        for (const entry of mBodies) {
+          const b = entry.body;
+          const fc = entry.label === 'RED' ? 1 : -1;
+          drawCubeRotated(b.position.x, b.position.y, entry.color,
+            entry === mDragTarget, entry.label, b.angle, fc);
+        }
+        if (mDragConstraint && mDragTarget) drawDragLine(mDragTarget.body);
+
+        document.getElementById('phase-label').textContent = 'PHYSICS TEST';
+        document.getElementById('phase-label').className = '';
+        document.getElementById('phase-label').style.color = '#2ecc71';
+        document.getElementById('info').textContent = `${mBodies.length} cubes | Matter.js`;
+        document.getElementById('timeline-fill').style.width = '0%';
+        document.getElementById('frame-counter').textContent = '';
+        document.getElementById('direction-label').textContent = '';
+        ctx.restore();
+        return;
+      }
+
+      // --- PLACING MODE ---
+      if (placing && tRedBody && tBlueBody) {
+        // Yellow walls
+        for (const uw of userWalls) drawYellowWall(uw.cx, uw.cy, uw.w, uw.h, 0.6);
+        // Wall being drawn
+        if (drawingWall) {
+          const dx = mouseX - wallStartX, dy = mouseY - wallStartY;
+          drawYellowWall(wallStartX + dx / 2, wallStartY + dy / 2,
+            Math.abs(dx), Math.abs(dy), 0.3);
+        }
+
+        for (let i = 0; i < greenBodies.length; i++) {
+          const gb = greenBodies[i];
+          drawGreenCube(gb.position.x, gb.position.y, gb.angle, 0.6);
+        }
+        drawCubeRotated(tBlueBody.position.x, tBlueBody.position.y,
+          'rgba(52,152,219,0.9)', true, 'BLUE', tBlueBody.angle, -1);
+        drawCubeRotated(tRedBody.position.x, tRedBody.position.y,
+          'rgba(231,76,60,0.9)', true, 'RED', tRedBody.angle, 1);
+
+        document.getElementById('phase-label').textContent = 'SETUP';
+        document.getElementById('phase-label').className = '';
+        document.getElementById('phase-label').style.color = 'rgba(255,255,255,0.5)';
+        document.getElementById('info').textContent = `Стены: ${userWalls.length}/2`;
+        document.getElementById('timeline-fill').style.width = '0%';
+        document.getElementById('frame-counter').textContent = '';
+        document.getElementById('direction-label').textContent = '';
+        ctx.restore();
+        return;
+      }
+
+      // --- TENET MODE ---
+      document.getElementById('phase-label').style.color = '';
+
+      drawTrail(redRecording, 'rgba(231,76,60,0.15)');
+      drawTrail(blueRecording, 'rgba(52,152,219,0.15)');
+
+      const fwd = isForward();
+
+      // Draw yellow walls
+      for (const uw of userWalls) drawYellowWall(uw.cx, uw.cy, uw.w, uw.h, 0.6);
+
+      // Draw green cubes (behind main cubes)
+      for (let i = 0; i < greenBodies.length; i++) {
+        const gb = greenBodies[i];
+        drawGreenCube(gb.position.x, gb.position.y, gb.angle, 0.7);
+      }
+
+      if (tRedBody && tBlueBody) {
+        // Draw replay first (behind), active on top
+        if (fwd) {
+          drawCubeRotated(tBlueBody.position.x, tBlueBody.position.y,
+            'rgba(52,152,219,0.7)', false, 'BLUE', tBlueBody.angle, -1);
+          drawCubeRotated(tRedBody.position.x, tRedBody.position.y,
+            'rgba(231,76,60,0.9)', true, 'RED', tRedBody.angle, 1);
+        } else {
+          drawCubeRotated(tRedBody.position.x, tRedBody.position.y,
+            'rgba(231,76,60,0.7)', false, 'RED', tRedBody.angle, 1);
+          drawCubeRotated(tBlueBody.position.x, tBlueBody.position.y,
+            'rgba(52,152,219,0.9)', true, 'BLUE', tBlueBody.angle, -1);
+        }
+
+        if (tDragConstraint) drawDragLine(activeBody());
+      }
+
+      const phaseLabel = document.getElementById('phase-label');
+      phaseLabel.textContent = fwd ? '► FORWARD' : '◄ BACKWARD';
+      phaseLabel.className = fwd ? 'phase-forward' : 'phase-backward';
+
+      const activeName = fwd ? 'RED' : 'BLUE';
+      const ctrl = playerControlling ? 'PLAYER' : 'AUTO';
+      document.getElementById('info').textContent =
+        `Iter ${iteration} | ${activeName} [${ctrl}]`;
+
+      const maxFrame = TOTAL_FRAMES - 1;
+      const progress = currentFrame / maxFrame * 100;
+      const fill = document.getElementById('timeline-fill');
+      fill.style.width = progress + '%';
+      fill.className = fwd ? 'fill-forward' : 'fill-backward';
+
+      document.getElementById('frame-counter').textContent =
+        `Frame ${currentFrame} / ${maxFrame}`;
+      document.getElementById('direction-label').textContent =
+        fwd ? 'TIME →' : '← TIME';
+
+      ctx.restore(); // undo ZOOM scale
+    }
+
+    // =============================================
+    //  MAIN LOOP
+    // =============================================
+    let lastTime = 0;
+    let accumulator = 0;
+
+    function loop(timestamp) {
+      requestAnimationFrame(loop);
+
+      let dt = timestamp - lastTime;
+      lastTime = timestamp;
+      if (dt > 200) dt = FRAME_DUR; // clamp, don't skip
+
+      pulseTime += dt / 1000;
+
+      if (testMode && mEngine) {
+        if (mDragTarget && mDragConstraint) {
+          const fc = mDragTarget.label === 'RED' ? 1 : -1;
+          updateDragTargetAngle(mDragTarget.body, fc);
+          applyDragAngleSpring(mDragTarget.body);
+        }
+        Engine.update(mEngine, Math.min(dt, 16.667));
+      } else if (running && tEngine) {
+        accumulator += dt;
+        while (accumulator >= FRAME_DUR && running) {
+          tenetTick();
+          accumulator -= FRAME_DUR;
+        }
+      }
+
+      render();
+    }
+
+    lastTime = performance.now();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
