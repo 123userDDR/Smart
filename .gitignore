@@ -1,1 +1,6 @@
-﻿aaa.txt
+﻿.obsidian
+*.obsidian
+/.obsidian
+*/.obsidian
+/*.obsidian
+.obsidians
