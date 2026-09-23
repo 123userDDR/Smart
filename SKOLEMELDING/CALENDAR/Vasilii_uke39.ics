@@ -1,0 +1,90 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Andrei//Vasilii 8E Skole//RU
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+
+BEGIN:VEVENT
+UID:vasilii-uke39-mon-minecraft@skolemelding
+DTSTAMP:20260921T000000Z
+DTSTART:20260921T100000
+DTEND:20260921T121500
+SUMMARY:8E: Minecraft
+DESCRIPTION:Проектный день. Убедиться заранее\, что Minecraft скачан и есть логин.
+LOCATION:Apalløkka skole
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke39-mon-skaperskolen@skolemelding
+DTSTAMP:20260921T000000Z
+DTSTART:20260921T124500
+DTEND:20260921T145000
+SUMMARY:8E: Skaperskolen (школа творчества)
+LOCATION:Apalløkka skole
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke39-tue-karakterstyrker@skolemelding
+DTSTAMP:20260921T000000Z
+DTSTART:20260922T090000
+DTEND:20260922T111500
+SUMMARY:8E: Karakterstyrker (развитие характера)
+LOCATION:Apalløkka skole
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke39-tue-historie@skolemelding
+DTSTAMP:20260921T000000Z
+DTSTART:20260922T114500
+DTEND:20260922T140000
+SUMMARY:8E: Ettermiddagen — «История»
+LOCATION:Apalløkka skole
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke39-wed-apastafetten@skolemelding
+DTSTAMP:20260921T000000Z
+DTSTART:20260923T100000
+DTEND:20260923T140000
+SUMMARY:8E: APA-stafetten (эстафета вокруг Steinbruvann)
+DESCRIPTION:Сбор в классе. Взять спортивную форму и еду с собой (matpakke).
+LOCATION:Apalløkka skole
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke39-thu-valgfag@skolemelding
+DTSTAMP:20260923T000000Z
+DTSTART:20260924T083000
+DTEND:20260924T141500
+SUMMARY:8E: Valgfag — программирование
+DESCRIPTION:Сбор: 3 этаж\, кабинет 10E и медиатека. Взять Mac\, еду и питьё.
+LOCATION:Apalløkka skole
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke39-fri-valgfag@skolemelding
+DTSTAMP:20260923T000000Z
+DTSTART:20260925T083000
+DTEND:20260925T141500
+SUMMARY:8E: Valgfag — программирование
+DESCRIPTION:Сбор: 3 этаж\, кабинет 10E и медиатека. Взять Mac\, еду и питьё.
+LOCATION:Apalløkka skole
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke39-vigilo@skolemelding
+DTSTAMP:20260921T000000Z
+DTSTART;VALUE=DATE:20260925
+SUMMARY:Проверить Vigilo: отметка по поведению/порядку
+DESCRIPTION:На неделе 39 всем ученикам поставят отметку в Vigilo по orden og oppførsel. Обсудить с ребёнком.
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke39-openhall-deadline@skolemelding
+DTSTAMP:20260923T000000Z
+DTSTART:20260925T150000
+DTEND:20260925T151500
+SUMMARY:Дедлайн регистрации: открытый спортзал (åpen hall) на каникулах
+END:VEVENT
+
+END:VCALENDAR

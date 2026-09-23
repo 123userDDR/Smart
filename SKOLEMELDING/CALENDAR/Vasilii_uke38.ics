@@ -1,0 +1,63 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Andrei//Vasilii 8E Skole//RU
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+
+BEGIN:VEVENT
+UID:vasilii-uke38-mot@skolemelding
+DTSTAMP:20260911T000000Z
+DTSTART:20260914T100000
+DTEND:20260914T120000
+SUMMARY:8E: MOT-занятие №2
+DESCRIPTION:Физкультуры у 8E на этой неделе нет — вместо неё MOT.
+LOCATION:Apalløkka skole
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke38-naturfag-frist@skolemelding
+DTSTAMP:20260911T000000Z
+DTSTART:20260918T083000
+DTEND:20260918T090000
+SUMMARY:Дедлайн: сдача тетради с лабораторными отчётами (Naturfag)
+DESCRIPTION:Имя и класс на первой странице\, отчёт по пульсу\, отчёт по опыту с дрожжами.
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke38-spansk-frist@skolemelding
+DTSTAMP:20260911T000000Z
+DTSTART:20260918T160000
+DTEND:20260918T161500
+SUMMARY:Дедлайн: цифровой плакат по испанскому (Teams)
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke38-halfday-planlegging@skolemelding
+DTSTAMP:20260911T000000Z
+DTSTART:20260915T122500
+DTEND:20260915T140000
+SUMMARY:8E: начало уроков в 12:25 (половина дня планирования у учителей)
+LOCATION:Apalløkka skole
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke38-klassekveld@skolemelding
+DTSTAMP:20260904T000000Z
+DTSTART:20260915T170000
+DTEND:20260915T190000
+SUMMARY:Встреча класса 8E (классный вечер) — родители и дети
+DESCRIPTION:Организуют родительские контакты\, в школе Apalløkka. Знакомство\, если погода позволит — немного на улице\, иначе в классах. Принести еду на общий стол + свои приборы\, тарелки\, стаканы.
+LOCATION:Apalløkka skole
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke38-apen-messe-grorud@skolemelding
+DTSTAMP:20260915T000000Z
+DTSTART:20260917T170000
+DTEND:20260917T183000
+SUMMARY:День открытых дверей (Åpen messe), Grorud Flerbrukshus
+DESCRIPTION:Grorudveien 7. Бесплатно\, гриль\, подарки. Спортклубы\, фонды\, организации и районные службы района.
+LOCATION:Grorudveien 7\, Grorud Flerbrukshus
+END:VEVENT
+
+END:VCALENDAR

@@ -1,0 +1,33 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Andrei//Vasilii 8E Skole//RU
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+
+BEGIN:VEVENT
+UID:vasilii-hostferie-uke40@skolemelding
+DTSTAMP:20260923T000000Z
+DTSTART;VALUE=DATE:20260928
+DTEND;VALUE=DATE:20261003
+SUMMARY:Осенние каникулы (høstferie) — школы нет
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke40-openhall-mon@skolemelding
+DTSTAMP:20260923T000000Z
+DTSTART:20260928T100000
+DTEND:20260928T140000
+SUMMARY:Открытый спортзал (åpen hall), 8-10 классы
+DESCRIPTION:По желанию. Нужна регистрация заранее (дедлайн пт 25.09 15:00).
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke40-openhall-tue@skolemelding
+DTSTAMP:20260923T000000Z
+DTSTART:20260929T100000
+DTEND:20260929T140000
+SUMMARY:Открытый спортзал (åpen hall), 8-10 классы
+DESCRIPTION:По желанию. Нужна регистрация заранее (дедлайн пт 25.09 15:00).
+END:VEVENT
+
+END:VCALENDAR

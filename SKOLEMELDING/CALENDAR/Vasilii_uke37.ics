@@ -1,0 +1,61 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Andrei//Vasilii 8E Skole//RU
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+
+BEGIN:VEVENT
+UID:vasilii-uke37-valgfag-frist@skolemelding
+DTSTAMP:20260904T000000Z
+DTSTART;VALUE=DATE:20260907
+SUMMARY:Дедлайн: выбор факультативов (valgfag) на 2026-27 год — 3 пожелания через форму
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke37-kro-telefon@skolemelding
+DTSTAMP:20260904T000000Z
+DTSTART:20260907T100000
+DTEND:20260907T110000
+SUMMARY:8E: физкультура первым уроком — сбор в классе\, сдать телефон
+LOCATION:Apalløkka skole
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke37-prover-lesing@skolemelding
+DTSTAMP:20260904T000000Z
+DTSTART;VALUE=DATE:20260908
+SUMMARY:Национальная проверочная работа по чтению (lesing)
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke37-prover-regning@skolemelding
+DTSTAMP:20260904T000000Z
+DTSTART;VALUE=DATE:20260909
+SUMMARY:Национальная проверочная работа по математике (regning)
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke37-stillhet-kongen@skolemelding
+DTSTAMP:20260904T000000Z
+DTSTART:20260909T130000
+DTEND:20260909T130100
+SUMMARY:Минута тишины в память о короле Харальде (все классы)
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke37-tur-kjulstjern@skolemelding
+DTSTAMP:20260904T000000Z
+DTSTART:20260910T100000
+DTEND:20260910T180000
+SUMMARY:Поход на Kjulstjern (8E)
+DESCRIPTION:Точное место сбора было в приложении к сообщению (PDF)\, не сохранено здесь. Поход прошёл успешно.
+END:VEVENT
+
+BEGIN:VEVENT
+UID:vasilii-uke37-avspasering@skolemelding
+DTSTAMP:20260904T000000Z
+DTSTART;VALUE=DATE:20260911
+SUMMARY:Отгул (avspasering) после обеда — компенсация за поход
+END:VEVENT
+
+END:VCALENDAR
