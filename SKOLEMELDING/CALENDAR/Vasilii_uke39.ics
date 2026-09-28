@@ -79,12 +79,4 @@ SUMMARY:Проверить Vigilo: отметка по поведению/пор
 DESCRIPTION:На неделе 39 всем ученикам поставят отметку в Vigilo по orden og oppførsel. Обсудить с ребёнком.
 END:VEVENT
 
-BEGIN:VEVENT
-UID:vasilii-uke39-openhall-deadline@skolemelding
-DTSTAMP:20260923T000000Z
-DTSTART:20260925T150000
-DTEND:20260925T151500
-SUMMARY:Дедлайн регистрации: открытый спортзал (åpen hall) на каникулах
-END:VEVENT
-
 END:VCALENDAR
